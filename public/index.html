@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Agendamento</title>
+</head>
+<body>
+  <h1>Agendar Recurso</h1>
+  <form id="form">
+    <input type="text" name="funcionario_id" placeholder="ID do Funcionário" required><br>
+    <select name="recurso">
+      <option value="caixa">Caixa de Som</option>
+      <option value="projetor">Projetor</option>
+    </select><br>
+    <select name="dia">
+      <option value="Segunda">Segunda</option>
+      <option value="Terça">Terça</option>
+      <option value="Quarta">Quarta</option>
+      <option value="Quinta">Quinta</option>
+      <option value="Sexta">Sexta</option>
+    </select><br>
+    <select name="horario">
+      <option value="07:00">07:00</option>
+      <option value="07:30">07:30</option>
+      <option value="08:00">08:00</option>
+      <option value="08:30">08:30</option>
+      <option value="09:00">09:00</option>
+      <option value="09:30">09:30</option>
+      <option value="10:00">10:00</option>
+      <option value="10:30">10:30</option>
+      <option value="11:00">11:00</option>
+      <option value="11:30">11:30</option>
+      <option value="13:00">13:00</option>
+      <option value="13:30">13:30</option>
+      <option value="14:00">14:00</option>
+      <option value="14:30">14:30</option>
+      <option value="15:00">15:00</option>
+      <option value="15:30">15:30</option>
+      <option value="16:00">16:00</option>
+    </select><br>
+    <button type="submit">Agendar</button>
+  </form>
+
+  <script>
+    document.getElementById("form").onsubmit = async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      const res = await fetch("/api/agendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const msg = await res.json();
+      alert(msg.mensagem || msg.detail);
+    }
+  </script>
+</body>
+</html>
