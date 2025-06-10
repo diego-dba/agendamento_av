@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import List
 import json
 import os
 
@@ -10,12 +11,14 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-db_file = "db.json"
+# Serve os arquivos estáticos da pasta "public"
+app.mount("/static", StaticFiles(directory="public"), name="static")
+
+DB_PATH = os.path.join(os.path.dirname(__file__), "../db.json")
 
 class Agendamento(BaseModel):
     funcionario_id: str
@@ -23,28 +26,37 @@ class Agendamento(BaseModel):
     dia: str
     horario: str
 
-def load_db():
-    if not os.path.exists(db_file):
-        with open(db_file, "w") as f:
+def carregar_dados():
+    if not os.path.exists(DB_PATH):
+        with open(DB_PATH, "w") as f:
             json.dump([], f)
-    with open(db_file) as f:
+    with open(DB_PATH, "r") as f:
         return json.load(f)
 
-def save_db(data):
-    with open(db_file, "w") as f:
-        json.dump(data, f, indent=2)
+def salvar_dados(dados):
+    with open(DB_PATH, "w") as f:
+        json.dump(dados, f, indent=2)
 
-@app.post("/agendar")
-async def agendar(data: Agendamento):
-    db = load_db()
-    limite = 6 if data.recurso == "caixa" else 2
-    total = sum(1 for d in db if d["recurso"] == data.recurso and d["dia"] == data.dia and d["horario"] == data.horario)
-    if total >= limite:
-        raise HTTPException(status_code=400, detail="Limite atingido para este horário")
-    db.append(data.dict())
-    save_db(db)
+@app.post("/api/agendar")
+async def agendar(dado: Agendamento):
+    dados = carregar_dados()
+    limite = 6 if dado.recurso == "caixa" else 2
+    conflitos = [a for a in dados if a["dia"] == dado.dia and a["horario"] == dado.horario and a["recurso"] == dado.recurso]
+
+    if len(conflitos) >= limite:
+        raise HTTPException(status_code=400, detail="Limite atingido para esse horário.")
+
+    dados.append(dado.dict())
+    salvar_dados(dados)
     return {"mensagem": "Agendamento realizado com sucesso!"}
 
-@app.get("/agendamentos")
-async def listar_agendamentos():
-    return load_db()
+@app.get("/api/agendamentos")
+async def listar():
+    return carregar_dados()
+
+# Rota para servir o index.html na raiz "/"
+@app.get("/", response_class=HTMLResponse)
+async def raiz():
+    caminho = os.path.join("public", "index.html")
+    with open(caminho, "r", encoding="utf-8") as f:
+        return f.read()

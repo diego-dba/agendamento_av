@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Agendamento</title>
+  <title>Agendamento de Recursos</title>
 </head>
 <body>
-  <h1>Agendar Recurso</h1>
+  <h1>Agendamento de Caixa de Som / Projetor</h1>
   <form id="form">
     <input type="text" name="funcionario_id" placeholder="ID do Funcionário" required><br>
     <select name="recurso">
@@ -42,7 +42,7 @@
   </form>
 
   <script>
-    document.getElementById("form").onsubmit = async function(e) {
+    document.getElementById("form").onsubmit = async function (e) {
       e.preventDefault();
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
